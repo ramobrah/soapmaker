@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Soapmaker</title>
+  <meta name="description" content="Lye calculator for cold process, hot process and liquid soap, with dual lye, quality range bars, recipe warnings, saved recipes and shareable links.">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <h1>Soapmaker</h1>
+      <div class="header-actions">
+        <button type="button" id="btn-new" class="btn ghost">New</button>
+        <button type="button" id="btn-library" class="btn ghost">My recipes</button>
+        <button type="button" id="btn-share" class="btn ghost">Copy share link</button>
+        <button type="button" id="btn-print" class="btn">Print batch sheet</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap layout">
+    <!-- LEFT: settings + oil picker -->
+    <section class="col-left">
+      <div class="card">
+        <h2>Recipe</h2>
+        <label class="field">
+          <span>Name</span>
+          <input type="text" id="recipe-name" placeholder="e.g. Everyday castile-ish bar">
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span>Units</span>
+            <select id="units">
+              <option value="g">grams</option>
+              <option value="oz">ounces</option>
+              <option value="lb">pounds</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Enter oils by</span>
+            <select id="input-mode">
+              <option value="pct">percent</option>
+              <option value="wt">weight</option>
+            </select>
+          </label>
+        </div>
+        <label class="field" id="total-field">
+          <span>Total oil weight (<span class="unit-label">g</span>)</span>
+          <input type="number" id="total-oil" min="0" step="any" value="1000">
+        </label>
+      </div>
+
+      <div class="card">
+        <h2>Lye</h2>
+        <div class="field">
+          <span class="split-label">
+            <span>NaOH <strong id="naoh-share-out">100</strong>%</span>
+            <span>KOH <strong id="koh-share-out">0</strong>%</span>
+          </span>
+          <input type="range" id="naoh-share" min="0" max="100" step="1" value="100" aria-label="Share of saponification done by NaOH">
+          <div class="presets">
+            <button type="button" class="chip" data-share="100">Bar (NaOH)</button>
+            <button type="button" class="chip" data-share="95">Creamy bar 95/5</button>
+            <button type="button" class="chip" data-share="0">Liquid (KOH)</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <label class="field">
+            <span>NaOH purity %</span>
+            <input type="number" id="naoh-purity" min="50" max="100" step="0.1" value="100">
+          </label>
+          <label class="field">
+            <span>KOH purity %</span>
+            <input type="number" id="koh-purity" min="50" max="100" step="0.1" value="90">
+          </label>
+        </div>
+        <label class="field">
+          <span>Superfat %</span>
+          <input type="number" id="superfat" step="0.5" value="5">
+        </label>
+      </div>
+
+      <div class="card">
+        <h2>Water</h2>
+        <div class="segmented" role="radiogroup" aria-label="Water method">
+          <label><input type="radio" name="water-mode" value="pct" checked><span>% of oils</span></label>
+          <label><input type="radio" name="water-mode" value="conc"><span>Lye concentration</span></label>
+          <label><input type="radio" name="water-mode" value="ratio"><span>Water : lye</span></label>
+        </div>
+        <label class="field water-input" data-mode="pct">
+          <span>Water as % of oils</span>
+          <input type="number" id="water-pct" min="0" step="0.5" value="33">
+        </label>
+        <label class="field water-input" data-mode="conc" hidden>
+          <span>Lye concentration %</span>
+          <input type="number" id="lye-conc" min="10" max="60" step="0.5" value="33">
+        </label>
+        <label class="field water-input" data-mode="ratio" hidden>
+          <span>Water : lye ratio (x : 1)</span>
+          <input type="number" id="water-ratio" min="0.5" max="5" step="0.1" value="2">
+        </label>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Add oils</h2>
+          <button type="button" id="btn-custom-oil" class="btn ghost small">+ Custom oil</button>
+        </div>
+        <input type="search" id="oil-search" placeholder="Search oils, butters, fats…" autocomplete="off">
+        <div class="chips" id="cat-filters"></div>
+        <ul class="oil-list" id="oil-list" role="listbox" aria-label="Oils"></ul>
+        <div class="oil-preview" id="oil-preview" hidden></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: recipe + results -->
+    <section class="col-right">
+      <div class="card">
+        <div class="card-head">
+          <h2>Oils in recipe</h2>
+          <span class="muted" id="pct-total"></span>
+        </div>
+        <div class="table-scroll">
+          <table class="recipe-table">
+            <thead>
+              <tr><th>Oil</th><th class="num">%</th><th class="num">Weight (<span class="unit-label">g</span>)</th><th></th></tr>
+            </thead>
+            <tbody id="recipe-body"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="recipe-empty">No oils yet. Search or click an oil on the left to add it.</p>
+      </div>
+
+      <div class="card">
+        <h2>Batch</h2>
+        <div class="stat-grid" id="batch-stats"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Fragrance blend</h2>
+          <div class="blend-tools">
+            <select id="blend-load" aria-label="Load a saved blend"><option value="">Saved blends…</option></select>
+            <button type="button" id="btn-blend-save" class="btn ghost small">Save blend</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <label class="field">
+            <span>Total fragrance, % of oils</span>
+            <input type="number" id="fragrance-pct" min="0" step="0.5" value="3">
+          </label>
+          <div class="field">
+            <span>Total amount</span>
+            <div class="readout" id="fragrance-total"></div>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="recipe-table blend-table">
+            <thead>
+              <tr>
+                <th>Fragrance / essential oil</th>
+                <th>Type</th>
+                <th class="num" title="Relative amounts, e.g. 3 : 2 : 1">Parts</th>
+                <th class="num">% of blend</th>
+                <th class="num">Weight (<span class="unit-label">g</span>)</th>
+                <th class="num" title="Maximum skin-safe usage for soap, as % of oils, from your supplier or IFRA sheet">Max %</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="blend-body"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="blend-empty">No blend. Add components to split the total between several fragrances or essential oils.</p>
+        <div class="row-actions">
+          <button type="button" id="btn-blend-add" class="btn ghost small">+ Add component</button>
+        </div>
+        <p class="muted small">Parts are relative, e.g. lavender 3, cedarwood 2, peppermint 1. Max % is the skin-safe limit for soap (as % of oils) from your supplier's IFRA sheet; you'll be warned if a component goes over it.</p>
+      </div>
+
+      <div class="card">
+        <h2>Check this recipe</h2>
+        <ul class="warnings" id="warnings"></ul>
+      </div>
+
+      <div class="card">
+        <h2>Soap qualities</h2>
+        <p class="muted small">Shaded band = suggested range. Hover or tap a label for details. Hover an oil to compare it.</p>
+        <div class="bars" id="quality-bars"></div>
+      </div>
+
+      <div class="card">
+        <h2>Fatty acid profile</h2>
+        <div class="bars" id="fa-bars"></div>
+        <p class="muted small" id="sat-ratio"></p>
+      </div>
+
+      <div class="card">
+        <h2>Notes</h2>
+        <textarea id="notes" rows="4" placeholder="Batch date, additives, colorants, how it traced, cure notes…"></textarea>
+        <div class="row-actions">
+          <button type="button" id="btn-save" class="btn">Save to my recipes</button>
+          <button type="button" id="btn-export" class="btn ghost">Export JSON</button>
+          <label class="btn ghost file-btn">Import JSON<input type="file" id="import-file" accept="application/json,.json" hidden></label>
+        </div>
+      </div>
+
+      <p class="safety">
+        <strong>Safety:</strong> wear goggles and gloves, add lye to water (never water to lye), work in a ventilated area,
+        and keep children and pets away. SAP values are typical figures; natural oils vary. Double-check any recipe before you make it.
+      </p>
+    </section>
+  </main>
+
+  <!-- Library dialog -->
+  <dialog id="library-dialog">
+    <form method="dialog" class="dialog-body">
+      <div class="card-head">
+        <h2>My recipes</h2>
+        <button class="btn ghost small" value="close" aria-label="Close">Close</button>
+      </div>
+      <p class="muted small">Saved in this browser only. Use Export JSON or a share link to move recipes between devices.</p>
+      <ul class="library" id="library-list"></ul>
+    </form>
+  </dialog>
+
+  <!-- Custom oil dialog -->
+  <dialog id="custom-dialog">
+    <form method="dialog" class="dialog-body" id="custom-form">
+      <div class="card-head">
+        <h2>Custom oil</h2>
+        <button class="btn ghost small" value="cancel" formnovalidate>Cancel</button>
+      </div>
+      <label class="field"><span>Name</span><input type="text" name="name" required></label>
+      <div class="field-row">
+        <label class="field"><span>SAP value</span><input type="number" name="sap" step="any" min="0" required></label>
+        <label class="field"><span>SAP given as</span>
+          <select name="sapType">
+            <option value="naoh">NaOH (g per g, e.g. 0.135)</option>
+            <option value="koh">KOH (g per g, e.g. 0.190)</option>
+            <option value="kohmg">KOH (mg per g, e.g. 190)</option>
+          </select>
+        </label>
+      </div>
+      <div class="field-row">
+        <label class="field"><span>Iodine (optional)</span><input type="number" name="iod" step="any" min="0"></label>
+        <label class="field"><span>INS (optional)</span><input type="number" name="ins" step="any"></label>
+      </div>
+      <fieldset class="fa-grid">
+        <legend>Fatty acids % (optional)</legend>
+        <div id="custom-fa"></div>
+      </fieldset>
+      <div class="row-actions">
+        <button class="btn" value="save" id="custom-save">Save oil</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Print-only batch sheet -->
+  <section id="print-sheet" aria-hidden="true"></section>
+
+  <script src="js/oils.js"></script>
+  <script src="js/calc.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
