@@ -148,7 +148,10 @@
     <!-- 3. Analysis: three equal panels -->
     <section class="analysis">
       <div class="card check-card">
-        <h2>Check this recipe</h2>
+        <div class="card-head">
+          <h2>Check this recipe</h2>
+          <span class="badge" id="check-badge"></span>
+        </div>
         <ul class="warnings" id="warnings"></ul>
       </div>
       <div class="card">
@@ -226,7 +229,11 @@
         <h2>My recipes</h2>
         <button class="btn ghost small" value="close" aria-label="Close">Close</button>
       </div>
-      <p class="muted small">Saved in this browser only. Use Export JSON or a share link to move recipes between devices.</p>
+      <p class="muted small">Recipes are saved in this browser only. Clearing browser data deletes them, so back up now and then. A backup file includes your recipes, custom oils and saved fragrance blends; restoring it adds them to this browser (on any device) without deleting anything already here.</p>
+      <div class="row-actions backup-actions">
+        <button type="button" id="btn-backup" class="btn small">Back up everything</button>
+        <label class="btn ghost small file-btn">Restore from backup<input type="file" id="restore-file" accept="application/json,.json" hidden></label>
+      </div>
       <ul class="library" id="library-list"></ul>
     </form>
   </dialog>

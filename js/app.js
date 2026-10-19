@@ -405,6 +405,17 @@
     let html = list.map(x => `<li class="${x.level}">${esc(x.text)}</li>`).join("");
     if (res.rows.length && !serious.length) html = `<li class="ok">No problems found in the lye, water or oil balance.</li>` + html;
     $("#warnings").innerHTML = html;
+    const dangers = list.filter(x => x.level === "danger").length;
+    const warns = list.filter(x => x.level === "warn").length;
+    const status = !res.rows.length ? "" : dangers ? "danger" : warns ? "warn" : "ok";
+    const card = $("#warnings").closest(".card");
+    card.classList.remove("status-ok", "status-warn", "status-danger");
+    if (status) card.classList.add("status-" + status);
+    const badge = $("#check-badge");
+    badge.className = "badge" + (status ? " " + status : "");
+    badge.textContent = !status ? "" : dangers
+      ? `${dangers} problem${dangers > 1 ? "s" : ""}${warns ? ` · ${warns} warning${warns > 1 ? "s" : ""}` : ""}`
+      : warns ? `${warns} warning${warns > 1 ? "s" : ""}` : "All clear";
   }
 
   function barStatus(v, min, max) {
@@ -531,12 +542,70 @@
     reader.onload = () => {
       try {
         const data = JSON.parse(reader.result);
+        if (data.app === "soapmaker-backup") { restoreBackup(data); return; }
         const recipe = data.recipe || data.s || data;
         if (!Array.isArray(recipe.oils)) throw new Error("no oils");
         loadState(recipe, data.customOils || data.c);
         toast("Recipe imported");
       } catch (e) { toast("That file isn't a recipe from this calculator."); }
     };
+    reader.readAsText(file);
+  }
+
+  function downloadJSON(obj, filename) {
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  function backupAll() {
+    const payload = {
+      app: "soapmaker-backup", v: 1, exportedAt: new Date().toISOString(),
+      recipes: store.get(KEYS.recipes, []),
+      customOils: customOils,
+      blends: store.get(KEYS.blends, [])
+    };
+    if (!payload.recipes.length && !payload.customOils.length && !payload.blends.length) { toast("Nothing saved yet to back up"); return; }
+    downloadJSON(payload, `soapmaker-backup-${new Date().toISOString().slice(0, 10)}.json`);
+    toast(`Backed up ${payload.recipes.length} recipe${payload.recipes.length === 1 ? "" : "s"}`);
+  }
+
+  function restoreBackup(data) {
+    const recipes = store.get(KEYS.recipes, []);
+    let nr = 0, no = 0, nb = 0;
+    for (const r of data.recipes || []) {
+      if (!r || !r.state || !Array.isArray(r.state.oils)) continue;
+      const i = recipes.findIndex(x => x.id === r.id);
+      if (i >= 0) recipes[i] = r; else recipes.push(r);
+      nr++;
+    }
+    recipes.sort((a, b) => String(b.savedAt).localeCompare(String(a.savedAt)));
+    for (const o of data.customOils || []) {
+      if (!o || !o.id || !o.sap) continue;
+      const i = customOils.findIndex(x => x.id === o.id);
+      if (i >= 0) customOils[i] = o; else customOils.push(o);
+      no++;
+    }
+    const blends = store.get(KEYS.blends, []);
+    for (const b of data.blends || []) {
+      if (!b || !b.name || !Array.isArray(b.items)) continue;
+      const i = blends.findIndex(x => x.name === b.name);
+      if (i >= 0) blends[i] = b; else blends.push(b);
+      nb++;
+    }
+    blends.sort((a, b) => a.name.localeCompare(b.name));
+    const ok = store.set(KEYS.recipes, recipes) & store.set(KEYS.custom, customOils) & store.set(KEYS.blends, blends);
+    renderCatFilters(); renderOilList(); refreshBlendList();
+    if ($("#library-dialog").open) openLibrary();
+    toast(ok ? `Restored ${nr} recipe${nr === 1 ? "" : "s"}, ${nb} blend${nb === 1 ? "" : "s"}, ${no} custom oil${no === 1 ? "" : "s"}` : "Couldn't restore: browser storage is unavailable.");
+  }
+
+  function readJSONFile(file, cb) {
+    const reader = new FileReader();
+    reader.onload = () => { let data; try { data = JSON.parse(reader.result); } catch (e) { toast("That file isn't valid JSON."); return; } cb(data); };
     reader.readAsText(file);
   }
 
@@ -607,6 +676,16 @@
     bindForm(); bindPicker(); bindBlend(); setupCustomOil(); refreshBlendList();
     $("#btn-save").addEventListener("click", saveRecipe);
     $("#btn-library").addEventListener("click", openLibrary);
+    $("#btn-backup").addEventListener("click", backupAll);
+    $("#restore-file").addEventListener("change", e => {
+      const f = e.target.files[0]; e.target.value = "";
+      if (!f) return;
+      readJSONFile(f, data => {
+        if (data.app === "soapmaker-backup" || Array.isArray(data.recipes)) restoreBackup(data);
+        else if (data.recipe || Array.isArray(data.oils)) { loadState(data.recipe || data, data.customOils); $("#library-dialog").close(); toast("That was a single recipe; it's open now. Save it to add it to your list."); }
+        else toast("That file isn't a Soapmaker backup.");
+      });
+    });
     $("#btn-share").addEventListener("click", shareLink);
     $("#btn-export").addEventListener("click", exportJSON);
     $("#import-file").addEventListener("change", e => { if (e.target.files[0]) importJSON(e.target.files[0]); e.target.value = ""; });

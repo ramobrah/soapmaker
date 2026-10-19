@@ -10,8 +10,9 @@ A lye calculator for cold process, hot process and liquid soap. It's plain HTML,
 - **Enter oils by percent or by weight,** in grams, ounces or pounds.
 - **Fragrance blends:** set the total fragrance as a % of oils, then split it between components (essential or fragrance oils) by relative parts, e.g. 3 : 2 : 1. You get each component's weight and % of oils. Enter each component's skin-safe max % from the supplier's IFRA sheet and you'll be warned if it goes over. Blends can be saved and reused across recipes, and they appear on the print sheet.
 - **Quality range bars** for hardness, cleansing, conditioning, bubbly, creamy, iodine and INS, plus a fatty acid profile. Hover an oil to see it on its own as a marker on each bar.
-- **Recipe checks:** warnings for percentages that don't add to 100%, low or negative superfat, very strong or weak lye solutions, high-lauric recipes, rancidity (DOS) risk, too much castor, beeswax or fragrance, and qualities outside their ranges.
+- **Recipe checks:** warnings for percentages that don't add to 100%, low or negative superfat, very strong or weak lye solutions, high-lauric recipes, rancidity (DOS) risk, too much castor, beeswax or fragrance, and qualities outside their ranges. The panel turns green, amber or red to match the most serious finding.
 - **Saved recipes** in the browser (open, duplicate, delete). The current recipe is also autosaved.
+- **Back up / restore:** in My recipes, *Back up everything* downloads one file with all your recipes, custom oils and fragrance blends. *Restore from backup* adds them to any browser without deleting what's there, so you can also use it to move your library to another device.
 - **Share links:** the whole recipe is encoded in the URL, so there's no server or account.
 - **JSON export/import** and a **printable batch sheet** with weighing checkboxes and cure dates.
 - Dark mode and a phone-friendly layout.
