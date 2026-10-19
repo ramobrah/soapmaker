@@ -58,6 +58,10 @@ superfat:5,waterMode:"pct",waterPct:33,fragrancePct:0,oils:[{id:"olive",pct:70},
 id=>window.OILS.find(o=>o.id===id)); console.log(r.naoh.toFixed(1))'   # 142.3
 ```
 
+## Credits
+
+Developed by Omar S. Harb, Ph.D., with help from Claude (Anthropic).
+
 ## Data caveat
 
 The oil values are typical figures from common soapmaking references. Natural oils vary by source and batch. Check SAP values against your supplier's data, and check any recipe before you make it.

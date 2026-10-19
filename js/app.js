@@ -301,8 +301,8 @@
   function renderBlendDerived(res) {
     const u = state.units;
     const pct = C.num(state.fragrancePct);
-    $("#fragrance-total").innerHTML = `<strong>${w(res.fragrance)} ${u}</strong> <span class="muted">(${alt(res.fragrance)})</span>` +
-      `<div class="muted small">${fmt(pct * 10, 0)} g per kg of oils · ${fmt(pct / 100 * 16, 2)} oz per lb</div>`;
+    $("#fragrance-hint").textContent = `= ${w(res.fragrance)} ${u} (${alt(res.fragrance)}) · ${fmt(pct * 10, 0)} g per kg · ${fmt(pct / 100 * 16, 2)} oz per lb of oils`;
+    $("#fragrance-total").innerHTML = `Total fragrance: <strong>${w(res.fragrance)} ${u}</strong> <span class="muted">(${alt(res.fragrance)}) · ${fmt(pct, 1)}% of oils, set under Water &amp; fragrance</span>`;
     $$("#blend-body tr").forEach(tr => {
       const b = res.blend[+tr.dataset.i];
       if (!b) return;

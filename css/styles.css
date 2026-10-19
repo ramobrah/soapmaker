@@ -48,7 +48,12 @@ body {
   font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 .wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
-h1 { font-size: 1.25rem; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: 1.35rem; margin: 0; letter-spacing: -0.01em; }
+.brand { min-width: 0; flex: 1 1 420px; }
+.byline { font-size: 0.8rem; font-weight: 400; color: var(--muted); margin-left: 6px; letter-spacing: 0; }
+.tagline { margin: 2px 0 0; font-size: 0.88rem; color: var(--muted); max-width: 720px; }
+.blend-total { margin-bottom: 10px; font-size: 0.92rem; }
+#fragrance-hint { font-size: 0.78rem; }
 h2 { font-size: 0.95rem; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
 .muted { color: var(--muted); }
 .small { font-size: 0.85rem; }
@@ -58,10 +63,32 @@ h2 { font-size: 0.95rem; margin: 0 0 12px; text-transform: uppercase; letter-spa
 .header-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; padding-bottom: 12px; flex-wrap: wrap; }
 .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-/* Layout */
-.layout { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 16px; padding-top: 16px; padding-bottom: 32px; }
-.col-left, .col-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+/* Layout: settings row → picker + recipe side by side → results */
+main.wrap { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; padding-bottom: 24px; }
+.settings-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.workbench { display: grid; grid-template-columns: minmax(280px, 2fr) 3fr; gap: 16px; align-items: start; }
+.results { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.results-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.settings-row > *, .workbench > * { min-width: 0; }
+.settings-row .card .field:last-child { margin-bottom: 0; }
+@media (max-width: 1020px) {
+  .settings-row { grid-template-columns: 1fr 1fr; }
+  .settings-row > .card:first-child { grid-column: 1 / -1; }
+  /* Single column: batch, checks, qualities, fatty acids, then fragrance and notes */
+  .results { display: flex; flex-direction: column; }
+  .results-col { display: contents; }
+  .results-col:first-child > :nth-child(1) { order: 1; }
+  .results-col:first-child > :nth-child(2) { order: 2; }
+  .results-col:last-child > :nth-child(1) { order: 3; }
+  .results-col:last-child > :nth-child(2) { order: 4; }
+  .results-col:first-child > :nth-child(3) { order: 5; }
+  .results-col:first-child > :nth-child(4) { order: 6; }
+}
+@media (max-width: 760px) {
+  .settings-row, .workbench { grid-template-columns: 1fr; }
+}
+
+.site-footer { border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; padding: 16px 0 24px; text-align: center; }
 
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
 .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
@@ -113,7 +140,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .segmented label + label { border-left: 1px solid var(--border); }
 
 /* Oil picker */
-.oil-list { list-style: none; margin: 0; padding: 0; max-height: 340px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+.oil-list { list-style: none; margin: 0; padding: 0; max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
 .oil-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 10px; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
 .oil-list li:last-child { border-bottom: 0; }
 .oil-list li:hover, .oil-list li.active { background: var(--surface-2); }
@@ -232,7 +259,7 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
 #print-sheet { display: none; }
 @media print {
   body { background: #fff; color: #000; font-size: 11pt; }
-  .site-header, main, dialog, .toast { display: none !important; }
+  .site-header, main, .site-footer, dialog, .toast { display: none !important; }
   #print-sheet { display: block; padding: 0; }
   #print-sheet h1 { font-size: 18pt; margin-bottom: 2pt; }
   #print-sheet h3 { font-size: 11pt; margin: 14pt 0 4pt; text-transform: uppercase; letter-spacing: 0.04em; }
