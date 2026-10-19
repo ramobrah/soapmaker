@@ -110,9 +110,15 @@
         </div>
     </section>
 
+    <!-- Batch summary: full width, one row -->
+    <section class="card batch-strip" aria-label="Batch">
+      <h2>Batch</h2>
+      <div class="stat-grid" id="batch-stats"></div>
+    </section>
+
     <!-- 2. Build the recipe: picker beside the recipe table -->
     <section class="workbench">
-        <div class="card">
+        <div class="card picker-card">
           <div class="card-head">
             <h2>Add oils</h2>
             <button type="button" id="btn-custom-oil" class="btn ghost small">+ Custom oil</button>
@@ -120,14 +126,14 @@
           <input type="search" id="oil-search" placeholder="Search oils, butters, fats…" autocomplete="off">
           <div class="chips" id="cat-filters"></div>
           <ul class="oil-list" id="oil-list" role="listbox" aria-label="Oils"></ul>
-          <div class="oil-preview" id="oil-preview" hidden></div>
+          <div class="oil-preview" id="oil-preview"></div>
         </div>
-        <div class="card">
+        <div class="card recipe-card">
           <div class="card-head">
             <h2>Oils in recipe</h2>
             <span class="muted" id="pct-total"></span>
           </div>
-          <div class="table-scroll">
+          <div class="table-scroll recipe-scroll">
             <table class="recipe-table">
               <thead>
                 <tr><th>Oil</th><th class="num">%</th><th class="num">Weight (<span class="unit-label">g</span>)</th><th></th></tr>
@@ -139,68 +145,64 @@
         </div>
     </section>
 
-    <!-- 3. Results -->
-    <section class="results">
-      <div class="results-col">
-        <div class="card">
-          <h2>Batch</h2>
-          <div class="stat-grid" id="batch-stats"></div>
-        </div>
-        <div class="card">
-          <h2>Check this recipe</h2>
-          <ul class="warnings" id="warnings"></ul>
-        </div>
-        <div class="card">
-          <div class="card-head">
-            <h2>Fragrance blend</h2>
-            <div class="blend-tools">
-              <select id="blend-load" aria-label="Load a saved blend"><option value="">Saved blends…</option></select>
-              <button type="button" id="btn-blend-save" class="btn ghost small">Save blend</button>
-            </div>
-          </div>
-          <div class="blend-total" id="fragrance-total"></div>
-          <div class="table-scroll">
-            <table class="recipe-table blend-table">
-              <thead>
-                <tr>
-                  <th>Fragrance / essential oil</th>
-                  <th>Type</th>
-                  <th class="num" title="Relative amounts, e.g. 3 : 2 : 1">Parts</th>
-                  <th class="num">% of blend</th>
-                  <th class="num">Weight (<span class="unit-label">g</span>)</th>
-                  <th class="num" title="Maximum skin-safe usage for soap, as % of oils, from your supplier or IFRA sheet">Max %</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="blend-body"></tbody>
-            </table>
-          </div>
-          <p class="empty" id="blend-empty">No blend. Add components to split the total between several fragrances or essential oils.</p>
-          <div class="row-actions">
-            <button type="button" id="btn-blend-add" class="btn ghost small">+ Add component</button>
-          </div>
-          <p class="muted small">Parts are relative, e.g. lavender 3, cedarwood 2, peppermint 1. Max % is the skin-safe limit for soap (as % of oils) from your supplier's IFRA sheet; you'll be warned if a component goes over it.</p>
-        </div>
-        <div class="card">
-          <h2>Notes</h2>
-          <textarea id="notes" rows="4" placeholder="Batch date, additives, colorants, how it traced, cure notes…"></textarea>
-          <div class="row-actions">
-            <button type="button" id="btn-save" class="btn">Save to my recipes</button>
-            <button type="button" id="btn-export" class="btn ghost">Export JSON</button>
-            <label class="btn ghost file-btn">Import JSON<input type="file" id="import-file" accept="application/json,.json" hidden></label>
-          </div>
-        </div>
+    <!-- 3. Analysis: three equal panels -->
+    <section class="analysis">
+      <div class="card check-card">
+        <h2>Check this recipe</h2>
+        <ul class="warnings" id="warnings"></ul>
       </div>
-      <div class="results-col">
-        <div class="card">
-          <h2>Soap qualities</h2>
-          <p class="muted small">Shaded band = suggested range. Hover or tap a label for details. Hover an oil to compare it.</p>
-          <div class="bars" id="quality-bars"></div>
+      <div class="card">
+        <h2>Soap qualities</h2>
+        <p class="muted small">Shaded band = suggested range. Hover or tap a label for details. Hover an oil to compare it.</p>
+        <div class="bars" id="quality-bars"></div>
+      </div>
+      <div class="card">
+        <h2>Fatty acid profile</h2>
+        <div class="bars" id="fa-bars"></div>
+        <p class="muted small" id="sat-ratio"></p>
+      </div>
+    </section>
+
+    <!-- 4. Fragrance and notes -->
+    <section class="extras">
+      <div class="card blend-card">
+        <div class="card-head">
+          <h2>Fragrance blend</h2>
+          <div class="blend-tools">
+            <select id="blend-load" aria-label="Load a saved blend"><option value="">Saved blends…</option></select>
+            <button type="button" id="btn-blend-save" class="btn ghost small">Save blend</button>
+          </div>
         </div>
-        <div class="card">
-          <h2>Fatty acid profile</h2>
-          <div class="bars" id="fa-bars"></div>
-          <p class="muted small" id="sat-ratio"></p>
+        <div class="blend-total" id="fragrance-total"></div>
+        <div class="table-scroll">
+          <table class="recipe-table blend-table">
+            <thead>
+              <tr>
+                <th>Fragrance / essential oil</th>
+                <th>Type</th>
+                <th class="num" title="Relative amounts, e.g. 3 : 2 : 1">Parts</th>
+                <th class="num">% of blend</th>
+                <th class="num">Weight (<span class="unit-label">g</span>)</th>
+                <th class="num" title="Maximum skin-safe usage for soap, as % of oils, from your supplier or IFRA sheet">Max %</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="blend-body"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="blend-empty">No blend. Add components to split the total between several fragrances or essential oils.</p>
+        <div class="row-actions">
+          <button type="button" id="btn-blend-add" class="btn ghost small">+ Add component</button>
+        </div>
+        <p class="muted small">Parts are relative, e.g. lavender 3, cedarwood 2, peppermint 1. Max % is the skin-safe limit for soap (as % of oils) from your supplier's IFRA sheet; you'll be warned if a component goes over it.</p>
+      </div>
+      <div class="card notes-card">
+        <h2>Notes</h2>
+        <textarea id="notes" rows="4" placeholder="Batch date, additives, colorants, how it traced, cure notes…"></textarea>
+        <div class="row-actions">
+          <button type="button" id="btn-save" class="btn">Save to my recipes</button>
+          <button type="button" id="btn-export" class="btn ghost">Export JSON</button>
+          <label class="btn ghost file-btn">Import JSON<input type="file" id="import-file" accept="application/json,.json" hidden></label>
         </div>
       </div>
     </section>

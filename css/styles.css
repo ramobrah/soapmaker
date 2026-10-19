@@ -63,29 +63,34 @@ h2 { font-size: 0.95rem; margin: 0 0 12px; text-transform: uppercase; letter-spa
 .header-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; padding-bottom: 12px; flex-wrap: wrap; }
 .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-/* Layout: settings row → picker + recipe side by side → results */
+/* Layout: settings → batch strip → picker + recipe → analysis (3 panels) → fragrance + notes */
 main.wrap { display: flex; flex-direction: column; gap: 16px; padding-top: 16px; padding-bottom: 24px; }
 .settings-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-.workbench { display: grid; grid-template-columns: minmax(280px, 2fr) 3fr; gap: 16px; align-items: start; }
-.results { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
-.results-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.settings-row > *, .workbench > * { min-width: 0; }
+.workbench { display: grid; grid-template-columns: minmax(280px, 2fr) 3fr; gap: 16px; align-items: stretch; }
+.analysis { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; align-items: stretch; }
+.extras { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: stretch; }
+.settings-row > *, .workbench > *, .analysis > *, .extras > * { min-width: 0; }
 .settings-row .card .field:last-child { margin-bottom: 0; }
+
+/* Recipe card matches the picker's height; its table scrolls. */
+.recipe-card { display: flex; flex-direction: column; }
+.recipe-scroll { flex: 1 1 0; height: 0; min-height: 120px; overflow-y: auto; }
+.recipe-scroll thead th { position: sticky; top: 0; background: var(--surface); z-index: 1; }
+
+/* Notes card: textarea fills the panel */
+.notes-card { display: flex; flex-direction: column; }
+.notes-card textarea { flex: 1; min-height: 110px; }
+
 @media (max-width: 1020px) {
   .settings-row { grid-template-columns: 1fr 1fr; }
   .settings-row > .card:first-child { grid-column: 1 / -1; }
-  /* Single column: batch, checks, qualities, fatty acids, then fragrance and notes */
-  .results { display: flex; flex-direction: column; }
-  .results-col { display: contents; }
-  .results-col:first-child > :nth-child(1) { order: 1; }
-  .results-col:first-child > :nth-child(2) { order: 2; }
-  .results-col:last-child > :nth-child(1) { order: 3; }
-  .results-col:last-child > :nth-child(2) { order: 4; }
-  .results-col:first-child > :nth-child(3) { order: 5; }
-  .results-col:first-child > :nth-child(4) { order: 6; }
+  .analysis { grid-template-columns: 1fr 1fr; }
+  .analysis > .check-card { grid-column: 1 / -1; }
+  .extras { grid-template-columns: 1fr; }
 }
 @media (max-width: 760px) {
-  .settings-row, .workbench { grid-template-columns: 1fr; }
+  .settings-row, .workbench, .analysis { grid-template-columns: 1fr; }
+  .recipe-scroll { flex: none; height: auto; max-height: 420px; }
 }
 
 .site-footer { border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; padding: 16px 0 24px; text-align: center; }
@@ -148,7 +153,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .oil-list li.in-recipe { color: var(--muted); }
 .oil-list li.in-recipe .add { color: var(--muted); }
 .oil-list .none { color: var(--muted); cursor: default; }
-.oil-preview { margin-top: 10px; font-size: 0.85rem; color: var(--muted); }
+.oil-preview { margin-top: 10px; font-size: 0.85rem; color: var(--muted); min-height: 4.5em; }
+.oil-preview .hint { font-style: italic; }
 
 /* Recipe table */
 .table-scroll { overflow-x: auto; }
@@ -199,6 +205,16 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 }
 
 /* Batch stats */
+.batch-strip { display: flex; align-items: center; gap: 16px; padding: 12px 16px; }
+.batch-strip h2 { margin: 0; flex: 0 0 auto; }
+.batch-strip .stat-grid { flex: 1; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+.batch-strip .stat { padding: 7px 10px; }
+.batch-strip .stat .value { font-size: 1.1rem; }
+.batch-strip .stat .sub { font-size: 0.72rem; }
+@media (max-width: 760px) {
+  .batch-strip { flex-direction: column; align-items: stretch; gap: 10px; }
+  .batch-strip .stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
 .stat { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
 .stat .label { font-size: 0.78rem; color: var(--muted); }

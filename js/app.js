@@ -184,13 +184,12 @@
   function showPreview(oil) {
     previewOil = oil;
     const el = $("#oil-preview");
-    if (!oil) { el.hidden = true; renderBars(lastResult); return; }
+    if (!oil) { el.innerHTML = `<span class="hint">Hover over an oil to see its SAP values and compare it on the quality bars.</span>`; renderBars(lastResult); return; }
     const sat = oil.fa.slice(0, 4).reduce((a, b) => a + b, 0);
     const unsat = oil.fa.slice(4).reduce((a, b) => a + b, 0);
-    el.hidden = false;
     el.innerHTML = `<strong>${esc(oil.name)}</strong> · SAP NaOH ${fmt(C.sapNaOH(oil), 4)} · KOH ${fmt(C.sapKOH(oil), 4)} · Iodine ${oil.iod} · INS ${oil.ins}` +
       (sat + unsat > 0 ? ` · Sat:Unsat ${fmt(sat, 0)}:${fmt(unsat, 0)}` : "") +
-      `<br>Black markers on the bars show this oil on its own.`;
+      `<br>Black markers on the quality bars show this oil on its own.`;
     renderBars(lastResult);
   }
 
@@ -396,7 +395,7 @@
     html += stat("Water", res.water);
     if (res.fragrance > 0) html += stat("Fragrance", res.fragrance);
     html += stat("Total batch", res.batch);
-    html += `<div class="stat"><div class="label">Lye concentration</div><div class="value">${fmt(res.conc, 1)}%</div><div class="sub">water : lye ${fmt(res.ratio, 2)} : 1 · water ${fmt(res.oilTotal ? res.water / res.oilTotal * 100 : 0, 1)}% of oils</div></div>`;
+    html += `<div class="stat"><div class="label">Lye conc.</div><div class="value">${fmt(res.conc, 1)}%</div><div class="sub" title="Water ${fmt(res.oilTotal ? res.water / res.oilTotal * 100 : 0, 1)}% of oils">water : lye ${fmt(res.ratio, 2)} : 1</div></div>`;
     $("#batch-stats").innerHTML = html;
   }
 
