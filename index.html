@@ -17,7 +17,7 @@
       <div class="header-actions">
         <button type="button" id="btn-new" class="btn ghost">New</button>
         <button type="button" id="btn-library" class="btn ghost">My recipes</button>
-        <button type="button" id="btn-share" class="btn ghost">Copy share link</button>
+        <button type="button" id="btn-share" class="btn ghost">Share</button>
         <button type="button" id="btn-print" class="btn">Print batch sheet</button>
       </div>
     </div>
@@ -266,6 +266,36 @@
       </fieldset>
       <div class="row-actions">
         <button class="btn" value="save" id="custom-save">Save oil</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Share dialog -->
+  <dialog id="share-dialog">
+    <form method="dialog" class="dialog-body">
+      <div class="card-head">
+        <h2>Share this recipe</h2>
+        <button class="btn ghost small" value="close">Close</button>
+      </div>
+      <p class="small">Anyone with this link sees this recipe in Soapmaker and can save it to their own recipes. The link is a snapshot: later changes aren't included, so copy a new link after editing.</p>
+      <label class="check-row" id="share-notes-row"><input type="checkbox" id="share-notes"> Include my notes</label>
+      <div class="share-row">
+        <input type="text" id="share-url" readonly aria-label="Share link">
+        <button type="button" class="btn" id="share-copy">Copy link</button>
+      </div>
+      <p class="small warn-text" id="share-local" hidden>You're using a copy of Soapmaker on your computer, so this link only works on this computer. Share from the GitHub Pages version instead.</p>
+    </form>
+  </dialog>
+
+  <!-- Incoming shared link -->
+  <dialog id="incoming-dialog">
+    <form method="dialog" class="dialog-body">
+      <h2>Open shared recipe?</h2>
+      <p id="incoming-text"></p>
+      <div class="row-actions">
+        <button class="btn" value="save-open">Save mine, then open</button>
+        <button class="btn ghost" value="open">Open without saving</button>
+        <button class="btn ghost" value="keep">Keep mine</button>
       </div>
     </form>
   </dialog>

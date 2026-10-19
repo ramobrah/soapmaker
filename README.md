@@ -13,7 +13,7 @@ A lye calculator for cold process, hot process and liquid soap. It's plain HTML,
 - **Recipe checks:** warnings for percentages that don't add to 100%, low or negative superfat, very strong or weak lye solutions, high-lauric recipes, rancidity (DOS) risk, too much castor, beeswax or fragrance, and qualities outside their ranges. The panel turns green, amber or red to match the most serious finding.
 - **Saved recipes** in the browser (open, duplicate, delete). The current recipe is also autosaved.
 - **Back up / restore:** in My recipes, *Back up everything* downloads one file with all your recipes, custom oils and fragrance blends. *Restore from backup* adds them to any browser without deleting what's there, so you can also use it to move your library to another device.
-- **Share links:** the whole recipe is encoded in the URL, so there's no server or account.
+- **Share links:** the whole recipe is encoded in the URL, so there's no server or account. Notes are left out unless you tick *Include my notes*. If someone opens a shared link while they have unsaved work, Soapmaker asks first: save theirs then open, open without saving, or keep theirs.
 - **JSON export/import** and a **printable batch sheet** with weighing checkboxes and cure dates.
 - Dark mode and a phone-friendly layout.
 

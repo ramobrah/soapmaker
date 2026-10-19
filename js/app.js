@@ -5,7 +5,7 @@
   const $ = sel => document.querySelector(sel);
   const $$ = sel => Array.from(document.querySelectorAll(sel));
 
-  const KEYS = { current: "soapcalc.current", recipes: "soapcalc.recipes", custom: "soapcalc.customOils", blends: "soapcalc.blends" };
+  const KEYS = { current: "soapcalc.current", recipes: "soapcalc.recipes", custom: "soapcalc.customOils", blends: "soapcalc.blends", shareNotes: "soapcalc.shareNotes" };
   const DECIMALS = { g: 1, oz: 2, lb: 3 };
 
   const DEFAULT_STATE = () => ({
@@ -469,6 +469,30 @@
     writeForm(); renderRecipe(); renderBlend(); renderOilList(); changed();
   }
 
+  // Comparable form of a recipe state (ignores derived weights in percent mode, number-vs-string differences).
+  function fingerprint(st) {
+    if (!st) return "";
+    const n = Object.assign(DEFAULT_STATE(), st);
+    const out = {};
+    for (const k of Object.keys(DEFAULT_STATE())) out[k] = n[k];
+    out.oils = (n.oils || []).map(r => [r.id, +C.num(r.pct).toFixed(2), n.inputMode === "wt" ? +C.num(r.wt).toFixed(3) : 0]);
+    out.fragrances = (n.fragrances || []).map(c => [String(c.name || ""), c.type === "FO" ? "FO" : "EO", C.num(c.parts), c.max === "" || c.max == null ? null : C.num(c.max)]);
+    for (const k of ["totalOil", "naohShare", "naohPurity", "kohPurity", "superfat", "waterPct", "lyeConc", "waterRatio", "fragrancePct"]) out[k] = C.num(out[k]);
+    out.name = String(out.name || "").trim();
+    return JSON.stringify(out);
+  }
+
+  // Save the current recipe without prompting; never overwrite a different recipe with the same name.
+  function saveCurrentQuietly() {
+    const recipes = store.get(KEYS.recipes, []);
+    let name = state.name.trim() || "Untitled recipe";
+    const same = recipes.find(r => r.name === name);
+    if (same && fingerprint(same.state) !== fingerprint(state)) name += ` (saved ${new Date().toLocaleString()})`;
+    if (same && fingerprint(same.state) === fingerprint(state)) return name;
+    recipes.unshift({ id: String(Date.now()), name, savedAt: new Date().toISOString(), state: snapshot(), customOils: usedCustomOils(state) });
+    return store.set(KEYS.recipes, recipes) ? name : null;
+  }
+
   function saveRecipe() {
     const name = state.name.trim() || prompt("Name this recipe:", "Untitled recipe");
     if (!name) return;
@@ -519,12 +543,59 @@
     return JSON.parse(decodeURIComponent(escape(atob(b64))));
   }
 
-  function shareLink() {
-    const payload = { v: 1, s: snapshot(), c: usedCustomOils(state) };
-    const url = location.origin + location.pathname + "#r=" + encodePayload(payload);
-    const done = () => toast("Share link copied");
-    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(done, () => prompt("Copy this link:", url));
-    else prompt("Copy this link:", url);
+  function buildShareUrl() {
+    const snap = snapshot();
+    if (!$("#share-notes").checked) snap.notes = "";
+    return location.origin + location.pathname + "#r=" + encodePayload({ v: 1, s: snap, c: usedCustomOils(state) });
+  }
+
+  function openShare() {
+    $("#share-notes").checked = store.get(KEYS.shareNotes, false) === true;
+    $("#share-notes-row").hidden = !state.notes.trim();
+    $("#share-url").value = buildShareUrl();
+    $("#share-local").hidden = location.protocol !== "file:";
+    $("#share-dialog").showModal();
+    $("#share-url").select();
+  }
+
+  function copyShare() {
+    const url = $("#share-url").value;
+    const fallback = () => { $("#share-url").select(); document.execCommand && document.execCommand("copy"); toast("Link copied"); };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(() => toast("Link copied"), fallback);
+    else fallback();
+  }
+
+  // Incoming shared link: ask before replacing unsaved work.
+  function hasUnsavedWork(current, starter, shared) {
+    if (!current || !(current.oils || []).length) return false;
+    const fp = fingerprint(current);
+    if (fp === fingerprint(starter) || fp === fingerprint(shared.s)) return false;
+    return !store.get(KEYS.recipes, []).some(r => fingerprint(r.state) === fp);
+  }
+
+  function offerShared(shared) {
+    const sName = String(shared.s.name || "").trim() || "Untitled recipe";
+    const cName = state.name.trim() || "an untitled recipe";
+    $("#incoming-text").innerHTML =
+      `This link contains <strong>${esc(sName)}</strong> (${(shared.s.oils || []).length} oils). ` +
+      `Opening it will replace the recipe you're working on now, <strong>${esc(cName)}</strong>, which isn't in My recipes yet.`;
+    const dlg = $("#incoming-dialog");
+    dlg.returnValue = "";
+    dlg.onclose = () => {
+      const v = dlg.returnValue;
+      if (v === "save-open") {
+        const saved = saveCurrentQuietly();
+        loadState(shared.s, shared.c);
+        toast(saved ? `Saved “${saved}” to My recipes, then opened the shared recipe` : "Couldn't save your recipe (browser storage unavailable); shared recipe not opened.");
+        if (!saved) loadState(store.get(KEYS.current, null) || shared.s);
+      } else if (v === "open") {
+        loadState(shared.s, shared.c); toast("Opened the shared recipe");
+      } else {
+        if (location.hash.startsWith("#r=")) history.replaceState(null, "", location.pathname + location.search);
+        toast("Kept your current recipe. The shared one was not opened.");
+      }
+    };
+    dlg.showModal();
   }
 
   function exportJSON() {
@@ -686,7 +757,9 @@
         else toast("That file isn't a Soapmaker backup.");
       });
     });
-    $("#btn-share").addEventListener("click", shareLink);
+    $("#btn-share").addEventListener("click", openShare);
+    $("#share-copy").addEventListener("click", copyShare);
+    $("#share-notes").addEventListener("change", e => { store.set(KEYS.shareNotes, e.target.checked); $("#share-url").value = buildShareUrl(); });
     $("#btn-export").addEventListener("click", exportJSON);
     $("#import-file").addEventListener("change", e => { if (e.target.files[0]) importJSON(e.target.files[0]); e.target.value = ""; });
     $("#btn-print").addEventListener("click", () => { buildPrintSheet(); window.print(); });
@@ -697,25 +770,41 @@
     });
 
     renderCatFilters();
-    let initial = store.get(KEYS.current, null);
-    let extra = null;
-    if (location.hash.startsWith("#r=")) {
-      try { const p = decodePayload(location.hash.slice(3)); initial = p.s; extra = p.c; }
-      catch (e) { toast("That share link couldn't be read."); }
+    const current = store.get(KEYS.current, null);
+    // A starter recipe so the page isn't empty on first visit.
+    const starter = Object.assign(DEFAULT_STATE(), {
+      name: "Starter bar",
+      oils: [
+        { id: "olive", pct: 40 }, { id: "coconut-76", pct: 25 }, { id: "shea", pct: 15 },
+        { id: "palm", pct: 15 }, { id: "castor", pct: 5 }
+      ]
+    });
+    STARTER = starter;
+    const shared = readSharedHash();
+    if (shared && !hasUnsavedWork(current, starter, shared)) {
+      loadState(shared.s, shared.c);
+      toast("Recipe loaded from link");
+    } else {
+      loadState(current || starter);
+      if (shared) offerShared(shared);
     }
-    if (!initial) {
-      // A starter recipe so the page isn't empty on first visit.
-      initial = Object.assign(DEFAULT_STATE(), {
-        name: "Starter bar",
-        oils: [
-          { id: "olive", pct: 40 }, { id: "coconut-76", pct: 25 }, { id: "shea", pct: 15 },
-          { id: "palm", pct: 15 }, { id: "castor", pct: 5 }
-        ]
-      });
-    }
-    const hashLoaded = location.hash.startsWith("#r=");
-    loadState(initial, extra);
-    if (hashLoaded) toast("Recipe loaded from link");
+    // A shared link pasted into a tab where Soapmaker is already open only changes the hash.
+    window.addEventListener("hashchange", () => {
+      const sh = readSharedHash();
+      if (!sh) return;
+      if (hasUnsavedWork(snapshot(), STARTER, sh)) offerShared(sh);
+      else { loadState(sh.s, sh.c); toast("Recipe loaded from link"); }
+    });
+  }
+
+  let STARTER = null;
+  function readSharedHash() {
+    if (!location.hash.startsWith("#r=")) return null;
+    try {
+      const sh = decodePayload(location.hash.slice(3));
+      if (!sh || !sh.s || !Array.isArray(sh.s.oils)) throw 0;
+      return sh;
+    } catch (e) { toast("That share link couldn't be read."); return null; }
   }
 
   document.addEventListener("DOMContentLoaded", init);
